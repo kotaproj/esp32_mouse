@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "..\\..\\BlinkLed"
+		},
+		{
+			"name": "ipadBleMouse",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"memory": "cpp",
+			"*.tcc": "cpp"
+		}
+	}
+}
