@@ -204,7 +204,7 @@ static void vProcCtlCmdSw_DOWN(uint32_t ulCode)
         break;
 
     case SW_CODE_NO2:
-        vPrintCtlSw("vProcCtlCmdSw_DOWN_CODE_NO4", __func__, __FILE__);
+        vPrintCtlSw("vProcCtlCmdSw_DOWN_CODE_NO2", __func__, __FILE__);
         xSendMouseQueue_Wheel(UID_CTL, 8);
         break;
 
@@ -214,7 +214,7 @@ static void vProcCtlCmdSw_DOWN(uint32_t ulCode)
         break;
 
     case SW_CODE_NO4:
-        vPrintCtlSw("vProcCtlCmdSw_DOWN_CODE_NO2", __func__, __FILE__);
+        vPrintCtlSw("vProcCtlCmdSw_DOWN_CODE_NO4", __func__, __FILE__);
         xSendMouseQueue_Code(UID_CTL, MOUSE_CODE_PRESS, MOUSE_RIGHT);
         break;
 
@@ -256,7 +256,6 @@ static void vProcCtlCmdSw_UP(uint32_t ulCode)
 
     case SW_CODE_NO2:
         vPrintCtlSw("vProcCtlCmdSw_UP_CODE_NO2", __func__, __FILE__);
-        xSendMouseQueue_Code(UID_CTL, MOUSE_CODE_RELEASE, MOUSE_RIGHT);
         break;
 
     case SW_CODE_NO3:
@@ -265,6 +264,7 @@ static void vProcCtlCmdSw_UP(uint32_t ulCode)
 
     case SW_CODE_NO4:
         vPrintCtlSw("vProcCtlCmdSw_UP_CODE_NO4", __func__, __FILE__);
+        xSendMouseQueue_Code(UID_CTL, MOUSE_CODE_RELEASE, MOUSE_RIGHT);
         break;
 
     case SW_CODE_NO5:
