@@ -131,8 +131,8 @@ static void vProcCtlCmdJs(JsMessage_t *pxData_t)
     // +0 - +4095 => -2 - +1      : /1024
     int32_t slConvX, slConvY;
 
-    slConvX = (int32_t)((pxData_t->slAxisX - 2048) / 64);
-    slConvY = (-1) * (int32_t)((pxData_t->slAxisY - 2048) / 64);
+    slConvX = (int32_t)((pxData_t->slAxisX - 2048) / 128);
+    slConvY = (-1) * (int32_t)((pxData_t->slAxisY - 2048) / 128);
 
     xSendMouseQueue_MoveXy(UID_CTL, (int8_t)slConvX, (int8_t)slConvY);
 
