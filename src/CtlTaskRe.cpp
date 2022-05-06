@@ -118,7 +118,7 @@ ErType_t xReciveQueRe(QueueSetMemberHandle_t *pxQueSetMember, MessageCtlRe_t *px
 static void vProcCtlCmdRe(ReMessage_t *pxData_t)
 {
     vPrintCtlRe("run", __func__, __FILE__);
-    xSendMouseQueue_Wheel(UID_CTL, (int8_t)pxData_t->slCount);
+    xSendMouseQueue_Wheel(UID_CTL, (int32_t)pxData_t->slCount);
     return;
 }
 

@@ -156,23 +156,23 @@ static ErType_t xProcMouseCode_CLICK(MouseMessage_t *pxMessage)
 static ErType_t xProcMouseCode_MOVE(MouseMessage_t *pxMessage)
 {
 #if ROUTE_MOUSE_TASK
-    Serial.printf("%s - run - (%d, %d)\n", __func__, pxMessage->s8x, pxMessage->s8y);
+    Serial.printf("%s - run - (%d, %d)\n", __func__, pxMessage->s32x, pxMessage->s32y);
 #endif
 
     int32_t max_count;
     int8_t step;
-    if (pxMessage->wheel > 0)
+    if (pxMessage->s32wheel > 0)
     {
-        max_count = pxMessage->wheel;
+        max_count = pxMessage->s32wheel;
         step = 1;
     }
     else
     {
-        max_count = (-1) * pxMessage->wheel;
+        max_count = (-1) * pxMessage->s32wheel;
         step = -1;
     }
 
-    if (0 != pxMessage->wheel || 0 != pxMessage->hWheel)
+    if (0 != pxMessage->s32wheel || 0 != pxMessage->s32hWheel)
     {
         for (int32_t i = 0; i < max_count; i++)
         {
@@ -182,7 +182,7 @@ static ErType_t xProcMouseCode_MOVE(MouseMessage_t *pxMessage)
     }
     else
     {
-        s_xBleMouse.move(pxMessage->s8x, pxMessage->s8y, pxMessage->wheel, pxMessage->hWheel);
+        s_xBleMouse.move(pxMessage->s32x, pxMessage->s32y, pxMessage->s32wheel, pxMessage->s32hWheel);
     }
 
     return ER_OK;
@@ -251,10 +251,10 @@ ErType_t xSendMouseQueue_Code(UniId_t xSrcId, uint8_t u8Code, uint8_t u8Type)
 
     xData.u8Code = u8Code;
     xData.u8Type = u8Type;
-    xData.s8x = 0;
-    xData.s8y = 0;
-    xData.wheel = 0;
-    xData.hWheel = 0;
+    xData.s32x = 0;
+    xData.s32y = 0;
+    xData.s32wheel = 0;
+    xData.s32hWheel = 0;
     xData.u8SpType = 0;
 
     return xSendMouseQueue(xSrcId, UID_MOUSE, &xData);
@@ -263,16 +263,16 @@ ErType_t xSendMouseQueue_Code(UniId_t xSrcId, uint8_t u8Code, uint8_t u8Type)
 /**
  * @brief キュー送信処理(Ctl->Mouse)-for MOVE
  */
-ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int8_t s8x, int8_t s8y)
+ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y)
 {
     static MouseMessage_t xData;
 
     xData.u8Code = MOUSE_CODE_MOVE;
     xData.u8Type = 0;
-    xData.s8x = s8x;
-    xData.s8y = s8y;
-    xData.wheel = 0;
-    xData.hWheel = 0;
+    xData.s32x = s32x;
+    xData.s32y = s32y;
+    xData.s32wheel = 0;
+    xData.s32hWheel = 0;
     xData.u8SpType = 0;
 
     return xSendMouseQueue(xSrcId, UID_MOUSE, &xData);
@@ -281,20 +281,20 @@ ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int8_t s8x, int8_t s8y)
 /**
  * @brief キュー送信処理(Ctl->Mouse)-for wheel
  */
-ErType_t xSendMouseQueue_Wheel(UniId_t xSrcId, int8_t wheel)
+ErType_t xSendMouseQueue_Wheel(UniId_t xSrcId, int32_t s32wheel)
 {
     static MouseMessage_t xData;
 
     xData.u8Code = MOUSE_CODE_MOVE;
     xData.u8Type = 0;
-    xData.s8x = 0;
-    xData.s8y = 0;
+    xData.s32x = 0;
+    xData.s32y = 0;
     // xData.wheel = wheel;
     // xData.hWheel = 0;
     // xData.wheel = 0;
     // xData.hWheel = wheel;
-    xData.wheel = wheel;
-    xData.hWheel = wheel;
+    xData.s32wheel = s32wheel;
+    xData.s32hWheel = s32wheel;
     xData.u8SpType = 0;
 
     return xSendMouseQueue(xSrcId, UID_MOUSE, &xData);
@@ -309,10 +309,10 @@ ErType_t xSendMouseQueue_Sp(UniId_t xSrcId, uint8_t u8Type)
 
     xData.u8Code = MOUSE_CODE_SP;
     xData.u8Type = u8Type;
-    xData.s8x = 0;
-    xData.s8y = 0;
-    xData.wheel = 0;
-    xData.hWheel = 0;
+    xData.s32x = 0;
+    xData.s32y = 0;
+    xData.s32wheel = 0;
+    xData.s32hWheel = 0;
     xData.u8SpType = 0;
 
     return xSendMouseQueue(xSrcId, UID_MOUSE, &xData);
@@ -349,10 +349,10 @@ static void vDummyTask(void *pvParameters)
 
     xData.u8Code = MOUSE_CODE_CLICK;
     xData.u8Type = MOUSE_LEFT;
-    xData.s8x = 0;
-    xData.s8y = 0;
-    xData.wheel = 0;
-    xData.hWheel = 0;
+    xData.s32x = 0;
+    xData.s32y = 0;
+    xData.s32wheel = 0;
+    xData.s32hWheel = 0;
     memset(&xData.ucReserve[0], 0x00, sizeof(xData.ucReserve));
 
     while (1)
@@ -364,15 +364,15 @@ static void vDummyTask(void *pvParameters)
         xData.u8Type = MOUSE_LEFT;
         for (int i = 0; i < 100; i += 10)
         {
-            xData.s8x = i;
-            xData.s8y = i;
+            xData.s32x = i;
+            xData.s32y = i;
             xSendMouseQueue(UID_CTL, UID_MOUSE, &xData);
             vTaskDelay(50 / portTICK_RATE_MS);
         }
         for (int i = 0; i < 100; i += 10)
         {
-            xData.s8x = (-1) * i;
-            xData.s8y = (-1) * i;
+            xData.s32x = (-1) * i;
+            xData.s32y = (-1) * i;
             xSendMouseQueue(UID_CTL, UID_MOUSE, &xData);
             vTaskDelay(50 / portTICK_RATE_MS);
         }
