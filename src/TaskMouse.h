@@ -33,7 +33,7 @@ extern "C"
     /* PROTOTYPES *****************************************************************/
     EXTERN ErType_t xInitMouse(void);
     EXTERN ErType_t xSendMouseQueue_Code(UniId_t xSrcId, uint8_t u8Code, uint8_t u8Type);
-    EXTERN ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y);
+    EXTERN ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y, uint8_t u8Linear);
     EXTERN ErType_t xSendMouseQueue_Wheel(UniId_t xSrcId, int32_t s32wheel);
     EXTERN ErType_t xSendMouseQueue_Sp(UniId_t xSrcId, uint8_t u8Type);
     EXTERN ErType_t xSendMouseQueue(UniId_t xSrcId, UniId_t xDstId, void *pvParam);

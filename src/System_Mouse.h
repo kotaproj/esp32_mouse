@@ -27,6 +27,7 @@ typedef enum
     MOUSE_CODE_NUM,
     MOUSE_CODE_MIN = MOUSE_CODE_CLICK,
     MOUSE_CODE_MAX = MOUSE_CODE_SP,
+    MOUSE_CODE_ERR = 0xFF,
 } MouseCode_e;
 
 /* DECLARATIONS - struct ******************************************************/
@@ -41,7 +42,7 @@ typedef struct
     uint8_t u8Code;        // 1 1
     uint8_t u8Type;        // 1 2
     uint8_t u8SpType;      // 1 3
-    uint8_t u8Dummy;       // 1 4
+    uint8_t u8Linear;      // 1 4
     int32_t s32x;          // 4 8
     int32_t s32y;          // 4 12
     int32_t s32wheel;      // 4 16

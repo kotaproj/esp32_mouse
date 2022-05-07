@@ -40,6 +40,7 @@ typedef enum
     UID_JS,          ///< JoyStick
     UID_RE,          ///< ロータリーエンコーダ
     UID_MOUSE,       ///< Mouse
+    UID_HD,          ///< Httpd
     UID_NUM,         ///< 識別子数
 } UniId_t;
 

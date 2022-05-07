@@ -6,6 +6,7 @@
 #include "ApiJs.h"
 #include "ApiRe.h"
 #include "ApiSw.h"
+#include "CtlTaskHd.h"
 #include "CtlTaskJs.h"
 #include "CtlTaskRe.h"
 #include "CtlTaskSw.h"
@@ -43,6 +44,7 @@ ErType_t xInitCtl(void)
     ulQueSetLength += ulGetQueLengthCtlSw();
     ulQueSetLength += ulGetQueLengthCtlRe();
     ulQueSetLength += ulGetQueLengthCtlJs();
+    ulQueSetLength += ulGetQueLengthCtlHd();
 
     // キューセットの作成
     s_xQueueSetCtl = xQueueCreateSet(ulQueSetLength);
@@ -70,6 +72,13 @@ ErType_t xInitCtl(void)
 
     //キュー - JSの生成と登録
     xErType = xInitCtlJs(&s_xQueueSetCtl);
+    if (ER_OK != xErType)
+    {
+        return xErType;
+    }
+
+    //キュー - HDの生成と登録
+    xErType = xInitCtlHd(&s_xQueueSetCtl);
     if (ER_OK != xErType)
     {
         return xErType;
@@ -103,6 +112,13 @@ static ErType_t xInitWorkCtl(void)
     }
     //ワークエリアの初期化, 送信コールバック関数の登録 - ジョイスティックキュー
     xErType = xInitWorkCtlJs();
+    if (ER_OK != xErType)
+    {
+        return xErType;
+    }
+
+    //ワークエリアの初期化, 送信コールバック関数の登録 - HDキュー
+    xErType = xInitWorkCtlHd();
     if (ER_OK != xErType)
     {
         return xErType;
@@ -145,12 +161,20 @@ static void vCtlTask(void *pvParameters)
             vPrintCtl("xReciveQueJs", __func__, __FILE__);
             continue;
         }
-
-        // トリガースイッチイベント動作
+        // // トリガーロータリーイベント動作
+        // トリガーロータリーイベント動作
         xErType = xReciveQueRe(&s_xActivatedMember, (MessageCtlRe_t *)&s_xMessage);
         if (ER_OK == xErType)
         {
             vPrintCtl("xReciveQueRe", __func__, __FILE__);
+            continue;
+        }
+
+        // トリガーHDイベント動作
+        xErType = xReciveQueHd(&s_xActivatedMember, (MessageCtlHd_t *)&s_xMessage);
+        if (ER_OK == xErType)
+        {
+            vPrintCtl("xReciveQueHd", __func__, __FILE__);
             continue;
         }
     }

@@ -4,6 +4,7 @@
 // #include "ApiRe.h"
 #include "ApiSw.h"
 #include "CtlTask.h"
+#include "TaskHd.h"
 #include "TaskMouse.h"
 
 void setup()
@@ -38,6 +39,11 @@ void setup()
     // {
     //     Serial.printf("Error! : xInitRe - %d\n", eEr);
     // }
+    eEr = xInitHd();
+    if (ER_OK != eEr)
+    {
+        Serial.printf("Error! : xInitHd - %d\n", eEr);
+    }
 }
 
 void loop()

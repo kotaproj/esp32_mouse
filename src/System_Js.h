@@ -12,8 +12,8 @@
 
 #define USE_JS 1
 #if USE_JS
-#define JS_ASGN_AXIS_X (25) //(27)
-#define JS_ASGN_AXIS_Y (27) //(25)
+#define JS_ASGN_AXIS_X (34) //(25) //(27)
+#define JS_ASGN_AXIS_Y (32) //(27) //(25)
 #endif                      // USE_JS
 #define JS_TH 500
 

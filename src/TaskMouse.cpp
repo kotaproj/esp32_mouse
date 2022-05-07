@@ -151,6 +151,98 @@ static ErType_t xProcMouseCode_CLICK(MouseMessage_t *pxMessage)
 }
 
 /**
+ * @brief コードイベント - MOVE_wheel
+ */
+static ErType_t xProcMouseCode_MOVE_wheel(uint8_t u8Linear, int32_t wheel)
+{
+#if ROUTE_MOUSE_TASK
+    Serial.printf("%s - run - %d\n", __func__, wheel);
+#endif
+
+    int32_t max_count;
+    int8_t step;
+    if (wheel > 0)
+    {
+        max_count = wheel;
+        step = 1;
+    }
+    else
+    {
+        max_count = (-1) * wheel;
+        step = -1;
+    }
+
+    for (int32_t i = 0; i < max_count; i++)
+    {
+        s_xBleMouse.move(0, 0, step, step);
+        delay(5);
+    }
+
+    return ER_OK;
+}
+
+/**
+ * @brief コードイベント - MOVE_cursor
+ */
+static ErType_t xProcMouseCode_MOVE_cursor(uint8_t u8Linear, int32_t x, int32_t y)
+{
+#if ROUTE_MOUSE_TASK
+    Serial.printf("%s - run - (%d, %d)\n", __func__, x, y);
+#endif
+    if (0 == u8Linear)
+    {
+        if (x > 127 || x < -128)
+        {
+            x = 0;
+        }
+        if (y > 127 || y < -128)
+        {
+            y = 0;
+        }
+        s_xBleMouse.move(x, y, 0, 0);
+        return ER_OK;
+    }
+
+    int32_t max_count;
+    int8_t step;
+    // x shift
+    if (x > 0)
+    {
+        max_count = (int32_t)x / 10;
+        step = 10;
+    }
+    else
+    {
+        max_count = (int32_t)((-1) * x / 10);
+        step = -10;
+    }
+    for (int32_t i = 0; i < max_count; i++)
+    {
+        s_xBleMouse.move(step, 0, 0, 0);
+        vTaskDelay(10 / portTICK_RATE_MS);
+    }
+
+    // y shift
+    if (y > 0)
+    {
+        max_count = (int32_t)(y / 10);
+        step = 10;
+    }
+    else
+    {
+        max_count = (int32_t)((-1) * y / 10);
+        step = -10;
+    }
+    for (int32_t i = 0; i < max_count; i++)
+    {
+        s_xBleMouse.move(0, step, 0, 0);
+        vTaskDelay(10 / portTICK_RATE_MS);
+    }
+
+    return ER_OK;
+}
+
+/**
  * @brief コードイベント - MOVE
  */
 static ErType_t xProcMouseCode_MOVE(MouseMessage_t *pxMessage)
@@ -159,33 +251,17 @@ static ErType_t xProcMouseCode_MOVE(MouseMessage_t *pxMessage)
     Serial.printf("%s - run - (%d, %d)\n", __func__, pxMessage->s32x, pxMessage->s32y);
 #endif
 
-    int32_t max_count;
-    int8_t step;
     if (pxMessage->s32wheel > 0)
     {
-        max_count = pxMessage->s32wheel;
-        step = 1;
+        return xProcMouseCode_MOVE_wheel(pxMessage->u8Linear, pxMessage->s32wheel);
     }
-    else
+    if (0 != pxMessage->s32x || 0 != pxMessage->s32y)
     {
-        max_count = (-1) * pxMessage->s32wheel;
-        step = -1;
+        return xProcMouseCode_MOVE_cursor(pxMessage->u8Linear, pxMessage->s32x, pxMessage->s32y);
     }
 
-    if (0 != pxMessage->s32wheel || 0 != pxMessage->s32hWheel)
-    {
-        for (int32_t i = 0; i < max_count; i++)
-        {
-            s_xBleMouse.move(0, 0, step, step);
-            delay(5);
-        }
-    }
-    else
-    {
-        s_xBleMouse.move(pxMessage->s32x, pxMessage->s32y, pxMessage->s32wheel, pxMessage->s32hWheel);
-    }
-
-    return ER_OK;
+    Serial.printf("%s - error - param - (%d, %d)\n", __func__, pxMessage->s32x, pxMessage->s32y);
+    return ER_PARAM;
 }
 
 /**
@@ -263,12 +339,13 @@ ErType_t xSendMouseQueue_Code(UniId_t xSrcId, uint8_t u8Code, uint8_t u8Type)
 /**
  * @brief キュー送信処理(Ctl->Mouse)-for MOVE
  */
-ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y)
+ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y, uint8_t u8Linear)
 {
-    static MouseMessage_t xData;
+    MouseMessage_t xData;
 
     xData.u8Code = MOUSE_CODE_MOVE;
     xData.u8Type = 0;
+    xData.u8Linear = u8Linear;
     xData.s32x = s32x;
     xData.s32y = s32y;
     xData.s32wheel = 0;
@@ -283,16 +360,12 @@ ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y)
  */
 ErType_t xSendMouseQueue_Wheel(UniId_t xSrcId, int32_t s32wheel)
 {
-    static MouseMessage_t xData;
+    MouseMessage_t xData;
 
     xData.u8Code = MOUSE_CODE_MOVE;
     xData.u8Type = 0;
     xData.s32x = 0;
     xData.s32y = 0;
-    // xData.wheel = wheel;
-    // xData.hWheel = 0;
-    // xData.wheel = 0;
-    // xData.hWheel = wheel;
     xData.s32wheel = s32wheel;
     xData.s32hWheel = s32wheel;
     xData.u8SpType = 0;
