@@ -1,31 +1,26 @@
 /**
  * @file TaskHd.c
  * @brief HTTPd通信タスク
- * @author kotatuneco
- * @date 2019/11/25
  */
-// #include "Debug.h"
-
-#include <WebServer.h>
-#include <WiFi.h>
 
 #include "TaskHd.h"
-// #include "ApiFs.h"
 #include "CtlTaskHd.h"
+#include <WebServer.h>
+#include <WiFi.h>
 
 /// @cond
 #define _INTASK_HD_C_
 /// @endcond
 
 /* DECLARATIONS ***************************************************************/
-#define DEBUG_TASK_HD (1)
+#define DEBUG_TASK_HD (0)
 #define TASK_HD_STACK (8192U)                       ///< コントロールタスクに割り当てるスタック容量
 #define TASK_HD_PRIORITY (configMAX_PRIORITIES - 6) ///< コントロールタスクの優先順位
 #define TASK_HD_WAIT_INTERVAL (1)
 
 /* Put your SSID & Password */
-const char *ssid = "Buffalo-G-6B00";    // Enter SSID here
-const char *password = "a5auc4dehctdx"; // Enter Password here
+const char *ssid = "xxxxxxxxxxx";      // Enter SSID here
+const char *password = "yyyyyyyyyyyy"; // Enter Password here
 
 /* VARIABLES ******************************************************************/
 
@@ -36,20 +31,13 @@ WebServer server(80);
 static void vTaskHd(void *pvParameters);
 void vHandleHdOnConnect(void);
 void vHandleHdOnConnectMouse(void);
-void vHandleHdOnConnectForm(void);
 void vHandleHdNotFound(void);
 static String sSendHdHTML(void);
-static String sSendHdHTML_Result(void);
-static String sSendHdHTML_Result_Error(void);
 
 /* TABLES ***************************************************************/
 
 /**
- * @brief 全体管理タスク初期化関数
- * @param void
- * @return ErType_t
- * @author kotatuneco
- * @date 2019/11/25
+ * @brief 初期化関数
  */
 ErType_t xInitHd(void)
 {
@@ -70,10 +58,6 @@ ErType_t xInitHd(void)
 
 /**
  * @brief ワークエリアの初期化(タスク生成後)
- * @param void
- * @return ErType_t
- * @author kotatuneco
- * @date 2019/11/25
  */
 static ErType_t xInitWorkHd(void)
 {
@@ -93,7 +77,6 @@ static ErType_t xInitWorkHd(void)
 
     server.on("/", vHandleHdOnConnect);
     server.on("/mouse", vHandleHdOnConnectMouse);
-    server.on("/form", vHandleHdOnConnectForm);
     server.onNotFound(vHandleHdNotFound);
     server.begin();
 
@@ -103,11 +86,7 @@ static ErType_t xInitWorkHd(void)
 }
 
 /**
- * @brief 割り込みからのキュー送信処理
- * @param[in] pvParam : パラメータ
- * @return void
- * @author kotatuneco
- * @date 2019/11/25
+ * @brief タスク処理
  */
 static void vTaskHd(void *pvParameters)
 {
@@ -142,7 +121,7 @@ static void vTaskHd(void *pvParameters)
 }
 
 /**
- * @brief [GET]http://ipadr:port/接続時のレスポンス処理
+ * @brief [GET]http://ipadr:port/ - 接続時のレスポンス処理
  */
 void vHandleHdOnConnect(void)
 {
@@ -153,7 +132,7 @@ void vHandleHdOnConnect(void)
 }
 
 /**
- * @brief eParseHdCode
+ * @brief query-codeのパース
  */
 static HdCode_e eParseHdCode(String msg)
 {
@@ -182,7 +161,7 @@ static HdCode_e eParseHdCode(String msg)
 }
 
 /**
- * @brief eParseHdType
+ * @brief query-typeのパース
  */
 static HdType_e eParseHdType(String msg)
 {
@@ -206,12 +185,24 @@ static HdType_e eParseHdType(String msg)
     {
         return HD_TYPE_MOUSE_FORWARD;
     }
+    else if (msg.equals("0x20"))
+    {
+        return HD_TYPE_MOUSE_0x20;
+    }
+    else if (msg.equals("0x40"))
+    {
+        return HD_TYPE_MOUSE_0x40;
+    }
+    else if (msg.equals("0x80"))
+    {
+        return HD_TYPE_MOUSE_0x80;
+    }
 
     return HD_TYPE_MOUSE_LEFT;
 }
 
 /**
- * @brief scParseHdInt
+ * @brief query-数値のパース
  */
 static int32_t slParseHdInt(String msg)
 {
@@ -224,7 +215,7 @@ static int32_t slParseHdInt(String msg)
 }
 
 /**
- * @brief [GET]http://ipadr:port/接続時のレスポンス処理
+ * @brief [GET]http://ipadr:port/mouse? - 接続時のレスポンス処理
  */
 void vHandleHdOnConnectMouse(void)
 {
@@ -240,6 +231,16 @@ void vHandleHdOnConnectMouse(void)
     s_xMessage.s32wheel = slParseHdInt(server.arg("wheel"));
     s_xMessage.s32hWheel = s_xMessage.s32wheel;
     s_xMessage.u8SpType = 0;
+    s_xMessage.s32Step = slParseHdInt(server.arg("step"));
+    if (0 == s_xMessage.s32Step)
+    {
+        s_xMessage.s32Step = 10;
+    }
+    s_xMessage.s32Delay = slParseHdInt(server.arg("delay"));
+    if (0 == s_xMessage.s32Delay)
+    {
+        s_xMessage.s32Delay = 10;
+    }
 
     if (HD_CODE_ERR == (HdCode_e)s_xMessage.u8Code)
     {
@@ -284,58 +285,6 @@ void vHandleHdOnConnectMouse(void)
 }
 
 /**
- * @brief [POST]http://ipadr:port/form接続時のレスポンス処理
- */
-void vHandleHdOnConnectForm(void)
-{
-    Serial.println("run:vHandleHdOnConnectForm");
-    // Serial.println(server.arg("ssid"));
-    // Serial.println(server.arg("pass"));
-    // Serial.println(server.arg("acskey"));
-
-    // if (0 == server.arg("ssid").length() || 0 == server.arg("pass").length() || 0 == server.arg("acskey").length())
-    // {
-    //     Serial.println("error:vHandleHdOnConnectForm");
-    //     server.send(200, "text/html", sSendHdHTML_Result_Error());
-    //     Serial.println("over:vHandleHdOnConnectForm");
-    //     return;
-    // }
-
-    // StrSsid = server.arg("ssid");
-    // StrPass = server.arg("pass");
-    // StrAcsKey = server.arg("acskey");
-
-    Serial.println("<<<<<<<<");
-    // Serial.println(StrSsid);
-    // Serial.println(StrPass);
-    // Serial.println(StrAcsKey);
-
-    // ファイルシステム経由で書き込み
-    // vSetFsSet_Ssid(StrSsid);
-    // vSetFsSet_Pass(StrPass);
-    // vSetFsSet_Acskey(StrAcsKey);
-
-    // ファイルシステム書き込み
-    // xWriteFsFile();
-
-    // debug
-    // xReadFsFile();
-    // StrSsid = "Ssid";     // String((const char *)pcGetFsSet_Ssid());
-    // StrPass = "Pass";     // String((const char *)pcGetFsSet_Pass());
-    // StrAcsKey = "AcsKey"; // String((const char *)pcGetFsSet_Acskey());
-    Serial.println("<-------");
-    // Serial.println(StrSsid);
-    // Serial.println(StrPass);
-    // Serial.println(StrAcsKey);
-    Serial.println("------->");
-
-    // server.send(200, "text/html", sSendHdHTML());
-    server.send(200, "text/html", sSendHdHTML_Result());
-    Serial.println("over:vHandleHdOnConnectForm");
-    return;
-}
-
-/**
  * @brief 404のレスポンス処理
  */
 void vHandleHdNotFound(void)
@@ -365,63 +314,17 @@ static String sSendHdHTML(void)
     ptr += "</style>\n";
     ptr += "</head>\n";
     ptr += "<body>\n";
-    ptr += "<h1>ESP32 Web Server</h1>\n";
-    ptr += "</body>\n";
-    ptr += "</html>\n";
+    ptr += "<h1>Usage</h1>\n";
 
-    return ptr;
-}
+    ptr += "<h2>Examples</h2>\n";
+    ptr += "<ul>\n";
+    ptr += "  <li>Perform single tap : IP Address/mouse?code=click&type=left</li>\n";
+    ptr += "  <li>movement : IP Address/mouse?code=move&x=-100&y=100</li>\n";
+    ptr += "</ul>\n";
 
-/**
- * @brief HTML送信処理
- */
-static String sSendHdHTML_Result(void)
-{
-    String ptr = "<!DOCTYPE html> <html>\n";
-    ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-    ptr += "<title>Webhooks Board</title>\n";
-    ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-    ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}\n";
-    ptr += ".button {display: block;width: 80px;background-color: #3498db;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
-    ptr += ".button-on {background-color: #3498db;}\n";
-    ptr += ".button-on:active {background-color: #2980b9;}\n";
-    ptr += ".button-off {background-color: #34495e;}\n";
-    ptr += ".button-off:active {background-color: #2c3e50;}\n";
-    ptr += "p {font-size: 14px;color: #888;margin-bottom: 10px;}\n";
-    ptr += "</style>\n";
-    ptr += "</head>\n";
-    ptr += "<body>\n";
-    ptr += "<h1>ESP32 Web Server</h1>\n";
-    ptr += "<h3>Saved.</h3>\n";
+    ptr += "<h2>Note</h2>\n";
+    ptr += "<a href=\"https:__zenn.dev/kotaproj/articles/esp32_mouse_httpd\">zenn-kotaproj</a>\n";
 
-    ptr += "</body>\n";
-    ptr += "</html>\n";
-
-    return ptr;
-}
-
-/**
- * @brief HTML送信処理 - Result - Error
- */
-static String sSendHdHTML_Result_Error(void)
-{
-    String ptr = "<!DOCTYPE html> <html>\n";
-    ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-    ptr += "<title>Webhooks Board</title>\n";
-    ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-    ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;} h3 {color: #444444;margin-bottom: 50px;}\n";
-    ptr += ".button {display: block;width: 80px;background-color: #3498db;border: none;color: white;padding: 13px 30px;text-decoration: none;font-size: 25px;margin: 0px auto 35px;cursor: pointer;border-radius: 4px;}\n";
-    ptr += ".button-on {background-color: #3498db;}\n";
-    ptr += ".button-on:active {background-color: #2980b9;}\n";
-    ptr += ".button-off {background-color: #34495e;}\n";
-    ptr += ".button-off:active {background-color: #2c3e50;}\n";
-    ptr += "p {font-size: 14px;color: #888;margin-bottom: 10px;}\n";
-    ptr += "</style>\n";
-    ptr += "</head>\n";
-    ptr += "<body>\n";
-    ptr += "<h1>ESP32 Web Server</h1>\n";
-    ptr += "<h3>Error.</h3>\n";
-    ptr += "<h3><a href=\"http://192.168.1.1\">top page</a><h3>\n";
     ptr += "</body>\n";
     ptr += "</html>\n";
 
@@ -461,33 +364,6 @@ void setup_for_httpd(void)
 
     xInitHd();
 }
-
-// void setup()
-// {
-//     BeginDebugPrint();
-//     delay(1000);
-//     DebugPrint("power on");
-
-//     // ApiFs
-//     // xInitFs();
-//     // xResetFsFile();
-
-//     xTaskCreatePinnedToCore(
-//         vDummyTask, "vDummyTask" // A name just for humans
-//         ,
-//         8192 // This stack size can be checked & adjusted by reading the Stack Highwater
-//         ,
-//         NULL, 2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-//         ,
-//         NULL, ARDUINO_RUNNING_CORE);
-
-//     xInitHd();
-// }
-
-// void loop()
-// {
-//     // put your main code here, to run repeatedly:
-// }
 
 #endif // DEBUG_TASK_HD
 

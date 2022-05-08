@@ -113,7 +113,7 @@ ErType_t xReciveQueHd(QueueSetMemberHandle_t *pxQueSetMember, MessageCtlHd_t *px
 }
 
 /**
- * @brief ジョイスティック処理(Ctl->Mouse)
+ * @brief Hd処理(Ctl->Mouse)
  */
 static void vProcCtlCmdHd(HdMessage_t *pxData_t)
 {
@@ -133,7 +133,7 @@ static void vProcCtlCmdHd(HdMessage_t *pxData_t)
         }
         else
         {
-            xSendMouseQueue_MoveXy(UID_CTL, pxData_t->s32x, pxData_t->s32y, pxData_t->u8Linear);
+            xSendMouseQueue_MoveXy(UID_CTL, pxData_t->s32x, pxData_t->s32y, pxData_t->u8Linear, pxData_t->s32Step, pxData_t->s32Delay);
         }
         break;
     case MOUSE_CODE_SP:

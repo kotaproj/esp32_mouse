@@ -39,15 +39,17 @@ typedef enum
  */
 typedef struct
 {
-    uint8_t u8Code;        // 1 1
-    uint8_t u8Type;        // 1 2
-    uint8_t u8SpType;      // 1 3
-    uint8_t u8Linear;      // 1 4
-    int32_t s32x;          // 4 8
-    int32_t s32y;          // 4 12
-    int32_t s32wheel;      // 4 16
-    int32_t s32hWheel;     // 4 20
-    uint8_t ucReserve[12]; // 12 32
+    uint8_t u8Code;       // 1 1
+    uint8_t u8Type;       // 1 2
+    uint8_t u8SpType;     // 1 3
+    uint8_t u8Linear;     // 1 4
+    int32_t s32x;         // 4 8
+    int32_t s32y;         // 4 12
+    int32_t s32wheel;     // 4 16
+    int32_t s32hWheel;    // 4 20
+    int32_t s32Step;      // 4 24
+    int32_t s32Delay;     // 4 28
+    uint8_t ucReserve[4]; // 4 32
 } MouseMessage_t;
 
 /**

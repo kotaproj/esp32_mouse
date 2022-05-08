@@ -1,8 +1,6 @@
 /**
  * @file System_Hd.h
  * @brief HTTPd定義ヘッダ
- * @author kotatuneco
- * @date 2019/11/25
  */
 
 #ifndef _SYSTEM_HD_H_
@@ -44,6 +42,9 @@ typedef enum
     HD_TYPE_MOUSE_MIDDLE = 4,
     HD_TYPE_MOUSE_BACK = 8,
     HD_TYPE_MOUSE_FORWARD = 16,
+    HD_TYPE_MOUSE_0x20 = 0x20,
+    HD_TYPE_MOUSE_0x40 = 0x40,
+    HD_TYPE_MOUSE_0x80 = 0x80,
 } HdType_e;
 
 /* DECLARATIONS - struct ******************************************************/
@@ -57,15 +58,17 @@ typedef enum
  */
 typedef struct
 {
-    uint8_t u8Code;        // 1 1
-    uint8_t u8Type;        // 1 2
-    uint8_t u8SpType;      // 1 3
-    uint8_t u8Linear;      // 1 4
-    int32_t s32x;          // 4 8
-    int32_t s32y;          // 4 12
-    int32_t s32wheel;      // 4 16
-    int32_t s32hWheel;     // 4 20
-    uint8_t ucReserve[12]; // 12 32
+    uint8_t u8Code;       // 1 1
+    uint8_t u8Type;       // 1 2
+    uint8_t u8SpType;     // 1 3
+    uint8_t u8Linear;     // 1 4
+    int32_t s32x;         // 4 8
+    int32_t s32y;         // 4 12
+    int32_t s32wheel;     // 4 16
+    int32_t s32hWheel;    // 4 20
+    int32_t s32Step;      // 4 24
+    int32_t s32Delay;     // 4 28
+    uint8_t ucReserve[4]; // 4 32
 } HdMessage_t;
 
 /**

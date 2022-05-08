@@ -139,8 +139,19 @@ static ErType_t xProcMouseCode_CLICK(MouseMessage_t *pxMessage)
     Serial.printf("%s - run\n", __func__);
 #endif
 
-    if (0 == (MOUSE_ALL & pxMessage->u8Type))
+    switch (pxMessage->u8Type)
     {
+    case MOUSE_LEFT:
+    case MOUSE_RIGHT:
+    case MOUSE_MIDDLE:
+    case MOUSE_BACK:
+    case MOUSE_FORWARD:
+        /*     case 0x20: */
+        /*     case 0x40: */
+        /*     case 0x80: */
+        // pass
+        break;
+    default:
         Serial.printf("%s - error type : %d\n", __func__, pxMessage->u8Type);
         return ER_PARAM;
     }
@@ -184,7 +195,7 @@ static ErType_t xProcMouseCode_MOVE_wheel(uint8_t u8Linear, int32_t wheel)
 /**
  * @brief コードイベント - MOVE_cursor
  */
-static ErType_t xProcMouseCode_MOVE_cursor(uint8_t u8Linear, int32_t x, int32_t y)
+static ErType_t xProcMouseCode_MOVE_cursor(uint8_t u8Linear, int32_t x, int32_t y, int32_t astep, int32_t adelay)
 {
 #if ROUTE_MOUSE_TASK
     Serial.printf("%s - run - (%d, %d)\n", __func__, x, y);
@@ -205,38 +216,39 @@ static ErType_t xProcMouseCode_MOVE_cursor(uint8_t u8Linear, int32_t x, int32_t 
 
     int32_t max_count;
     int8_t step;
+
     // x shift
     if (x > 0)
     {
-        max_count = (int32_t)x / 10;
-        step = 10;
+        max_count = (int32_t)x / astep;
+        step = astep;
     }
     else
     {
-        max_count = (int32_t)((-1) * x / 10);
-        step = -10;
+        max_count = (int32_t)((-1) * x / astep);
+        step = (-1) * astep;
     }
     for (int32_t i = 0; i < max_count; i++)
     {
         s_xBleMouse.move(step, 0, 0, 0);
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(adelay / portTICK_RATE_MS);
     }
 
     // y shift
     if (y > 0)
     {
-        max_count = (int32_t)(y / 10);
-        step = 10;
+        max_count = (int32_t)(y / astep);
+        step = astep;
     }
     else
     {
-        max_count = (int32_t)((-1) * y / 10);
-        step = -10;
+        max_count = (int32_t)((-1) * y / astep);
+        step = (-1) * astep;
     }
     for (int32_t i = 0; i < max_count; i++)
     {
         s_xBleMouse.move(0, step, 0, 0);
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(adelay / portTICK_RATE_MS);
     }
 
     return ER_OK;
@@ -251,13 +263,13 @@ static ErType_t xProcMouseCode_MOVE(MouseMessage_t *pxMessage)
     Serial.printf("%s - run - (%d, %d)\n", __func__, pxMessage->s32x, pxMessage->s32y);
 #endif
 
-    if (pxMessage->s32wheel > 0)
+    if (0 != pxMessage->s32wheel)
     {
         return xProcMouseCode_MOVE_wheel(pxMessage->u8Linear, pxMessage->s32wheel);
     }
     if (0 != pxMessage->s32x || 0 != pxMessage->s32y)
     {
-        return xProcMouseCode_MOVE_cursor(pxMessage->u8Linear, pxMessage->s32x, pxMessage->s32y);
+        return xProcMouseCode_MOVE_cursor(pxMessage->u8Linear, pxMessage->s32x, pxMessage->s32y, pxMessage->s32Step, pxMessage->s32Delay);
     }
 
     Serial.printf("%s - error - param - (%d, %d)\n", __func__, pxMessage->s32x, pxMessage->s32y);
@@ -273,8 +285,19 @@ static ErType_t xProcMouseCode_PRESS(MouseMessage_t *pxMessage)
     Serial.printf("%s - run\n", __func__);
 #endif
 
-    if (0 == (MOUSE_ALL & pxMessage->u8Type))
+    switch (pxMessage->u8Type)
     {
+    case MOUSE_LEFT:
+    case MOUSE_RIGHT:
+    case MOUSE_MIDDLE:
+    case MOUSE_BACK:
+    case MOUSE_FORWARD:
+        /*     case 0x20: */
+        /*     case 0x40: */
+        /*     case 0x80: */
+        // pass
+        break;
+    default:
         Serial.printf("%s - error type : %d\n", __func__, pxMessage->u8Type);
         return ER_PARAM;
     }
@@ -293,8 +316,19 @@ static ErType_t xProcMouseCode_RELEASE(MouseMessage_t *pxMessage)
     Serial.printf("%s - run\n", __func__);
 #endif
 
-    if (0 == (MOUSE_ALL & pxMessage->u8Type))
+    switch (pxMessage->u8Type)
     {
+    case MOUSE_LEFT:
+    case MOUSE_RIGHT:
+    case MOUSE_MIDDLE:
+    case MOUSE_BACK:
+    case MOUSE_FORWARD:
+        /*     case 0x20: */
+        /*     case 0x40: */
+        /*     case 0x80: */
+        // pass
+        break;
+    default:
         Serial.printf("%s - error type : %d\n", __func__, pxMessage->u8Type);
         return ER_PARAM;
     }
@@ -339,7 +373,7 @@ ErType_t xSendMouseQueue_Code(UniId_t xSrcId, uint8_t u8Code, uint8_t u8Type)
 /**
  * @brief キュー送信処理(Ctl->Mouse)-for MOVE
  */
-ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y, uint8_t u8Linear)
+ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y, uint8_t u8Linear, int32_t s32Step, int32_t s32Delay)
 {
     MouseMessage_t xData;
 
@@ -351,6 +385,8 @@ ErType_t xSendMouseQueue_MoveXy(UniId_t xSrcId, int32_t s32x, int32_t s32y, uint
     xData.s32wheel = 0;
     xData.s32hWheel = 0;
     xData.u8SpType = 0;
+    xData.s32Step = s32Step;
+    xData.s32Delay = s32Delay;
 
     return xSendMouseQueue(xSrcId, UID_MOUSE, &xData);
 }
